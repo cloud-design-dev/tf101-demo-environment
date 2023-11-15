@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+
+prep_system() {
+    DEBIAN_FRONTEND=noninteractive apt-get -qqy update
+    DEBIAN_FRONTEND=noninteractive apt-get -qqy -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' upgrade
+    DEBIAN_FRONTEND=noninteractive apt-get -qqy -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' install linux-headers-$(uname -r) build-essential python3-pip curl wget unzip jq 
+}
+
+add_logging() {
+
+cat <<EOF > /etc/logdna.env
+LOGDNA_LOGHOST=logs.${region}.logging.cloud.ibm.com
+LOGDNA_TAGS=bastion,project:${project}
+LOGDNA_INGESTION_KEY=${logging_key}
+
+EOF
+
+echo "deb https://assets.logdna.com stable main" | sudo tee /etc/apt/sources.list.d/logdna.list
+wget -qO - https://assets.logdna.com/logdna.gpg | sudo apt-key add -
+DEBIAN_FRONTEND=noninteractive apt-get -qqy update
+DEBIAN_FRONTEND=noninteractive apt-get install logdna-agent -y
+systemctl enable --now logdna-agent
+}
+
+add_monitoring() {
+    curl -sL https://ibm.biz/install-sysdig-agent | sudo bash -s -- -a ${monitoring_key} -c ingest.${region}.monitoring.cloud.ibm.com --collector_port 6443 --tags role:bastion,location:${region},project:${project} --secure true --additional_conf 'sysdig_capture_enabled: false\nfeature:\n    mode: monitor_light'
+}
+
+prep_system
+add_logging
+add_monitoring
