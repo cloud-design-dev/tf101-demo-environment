@@ -36,7 +36,7 @@ resource "tls_private_key" "ssh" {
 resource "ibm_is_ssh_key" "generated_key" {
   name           = "${local.prefix}-${var.region}-key"
   public_key     = tls_private_key.ssh.public_key_openssh
-  resource_group = local.resource_group_id
+  resource_group = module.resource_group.resource_group_id
   tags           = local.tags
 }
 
