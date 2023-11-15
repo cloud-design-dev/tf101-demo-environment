@@ -21,3 +21,4 @@ variable "default_address_prefix" {
 }
 
 variable "classic_access" { default = false }
+variable "instance_count" { default = 3 }
