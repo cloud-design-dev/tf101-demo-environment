@@ -45,7 +45,7 @@ variable "default_address_prefix" {
 }
 
 variable "classic_access" { default = false }
-variable "instance_count" { default = 3 }
+variable "instance_count" { default = 1 }
 variable "monitoring_key_secret" {}
 variable "logging_key_secret" {}
 

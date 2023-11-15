@@ -21,7 +21,7 @@ resource "ibm_is_ssh_key" "generated_key" {
   name           = "${local.prefix}-${var.region}-key"
   public_key     = tls_private_key.ssh.public_key_openssh
   resource_group = module.resource_group.resource_group_id
-  tags           = local.tags
+  tags           = concat(var.tags, local.tags)
 }
 
 resource "ibm_is_vpc" "vpc" {
