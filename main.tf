@@ -1,7 +1,7 @@
 locals {
-  basename = random_string.prefix.result
-  tags     = ["region:${var.region}", "vpc:${local.basename}-vpc"]
-  zones = 3
+  prefix = random_string.prefix.result
+  tags     = ["region:${var.region}", "vpc:${local.prefix}-vpc"]
+  zones = length(data.ibm_is_zones.regional.zones)
   vpc_zones = {
     for zone in range(local.zones) : zone => {
       zone = "${var.region}-${zone + 1}"
@@ -19,6 +19,25 @@ resource "random_string" "prefix" {
 module "resource_group" {
   source                       = "git::https://github.com/terraform-ibm-modules/terraform-ibm-resource-group.git?ref=v1.0.5"
   resource_group_name          = "${local.basename}-resource-group" 
+}
+
+resource "random_string" "prefix" {
+  length  = 4
+  special = false
+  upper   = false
+  numeric = false
+}
+
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "ibm_is_ssh_key" "generated_key" {
+  name           = "${local.prefix}-${var.region}-key"
+  public_key     = tls_private_key.ssh.public_key_openssh
+  resource_group = local.resource_group_id
+  tags           = local.tags
 }
 
 resource "ibm_is_vpc" "vpc" {
